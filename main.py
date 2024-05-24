@@ -1,4 +1,5 @@
 import math
+import random
 
 
 def calculate_if_loan_is_worth(
@@ -9,7 +10,7 @@ def calculate_if_loan_is_worth(
         loan_amount: float,
         expected_yearly_return_rate: float,    # TODO: calculate based on past investments ?
         capital_gains_tax_rate: float = 0.25,
-        # randomization_factor_for_monthly_return: float = 0,  # TODO: explain
+        randomization_monthly_return_factor: float = 0,  # TODO: explain
 ) -> bool:
     """
     Assumptions:
@@ -23,6 +24,7 @@ def calculate_if_loan_is_worth(
     :param loan_amount:
     :param expected_yearly_return_rate:
     :param capital_gains_tax_rate: 25% -> 0.25
+    :param randomization_monthly_return_factor:
     :return:
     """
     need_to_get_from_portfolio_gains = loan_amount / (1 - capital_gains_tax_rate)
@@ -41,18 +43,20 @@ def calculate_if_loan_is_worth(
     total_loan_payback_amount = loan_amount * loan_interest_rate
     # print(f"{total_loan_payback_amount = :,.2f}")
 
-    monthly_investment_contribution_or_loan_payback = total_loan_payback_amount / loan_length_in_month
-    # print(f"{monthly_investment_contribution_or_loan_payback = :,.2f}")
+    monthly_contribution_or_loan_payback = total_loan_payback_amount / loan_length_in_month
+    # print(f"{monthly_contribution_or_loan_payback = :,.2f}")
 
     without_loan_portfolio_end_size = __get_portfolio_size_after(start_portfolio=portfolio_after_expense_without_loan,
-                                                                 monthly_contribution=monthly_investment_contribution_or_loan_payback,
+                                                                 monthly_contribution=monthly_contribution_or_loan_payback,
                                                                  expected_yearly_return_rate=expected_yearly_return_rate,
-                                                                 month_amount=loan_length_in_month)
+                                                                 month_amount=loan_length_in_month,
+                                                                 randomization_monthly_return_factor=randomization_monthly_return_factor)
 
     with_loan_portfolio_end_size = __get_portfolio_size_after(start_portfolio=total_portfolio_amount,
                                                               monthly_contribution=0,
                                                               expected_yearly_return_rate=expected_yearly_return_rate,
-                                                              month_amount=loan_length_in_month)
+                                                              month_amount=loan_length_in_month,
+                                                              randomization_monthly_return_factor=randomization_monthly_return_factor)
 
     is_loan_worth_it = with_loan_portfolio_end_size > without_loan_portfolio_end_size  # TODO: add a risk factor
     print(f"""
@@ -63,13 +67,13 @@ def calculate_if_loan_is_worth(
     
     Option 1 - Pull from savings:
     The amount you will need to pull from your investments is {__format_number(total_portfolio_amount - portfolio_after_expense_without_loan)}$.
-    After paying for the expense you will invest {__format_number(monthly_investment_contribution_or_loan_payback)}$ every month
+    After paying for the expense you will invest {__format_number(monthly_contribution_or_loan_payback)}$ every month
     and your final portfolio size after {loan_length_in_month} month would be:
     {__format_number(without_loan_portfolio_end_size)}$
     
     Option 2 - Get a loan:
     The amount you will be paying on the loan will be {__format_number(total_loan_payback_amount)}$
-    Your monthly paybacks will be {__format_number(monthly_investment_contribution_or_loan_payback)}$
+    Your monthly paybacks will be {__format_number(monthly_contribution_or_loan_payback)}$
     and your final portfolio size after {loan_length_in_month} month would be:
     {__format_number(with_loan_portfolio_end_size)}$
      
@@ -100,23 +104,30 @@ def __format_number(large_number: float) -> str:
 def __get_portfolio_size_after(start_portfolio: float,
                                monthly_contribution: float,
                                expected_yearly_return_rate: float,
-                               month_amount: int) -> float:
+                               month_amount: int,
+                               randomization_monthly_return_factor: float
+                               ) -> float:
     expected_monthly_return_rate = math.pow(1 + expected_yearly_return_rate, 1 / 12)
     # print(f"{expected_monthly_return_rate = :,.4f}")
 
     portfolio_size = start_portfolio
     for _ in range(month_amount):
-        portfolio_size = (portfolio_size + monthly_contribution) * expected_monthly_return_rate
-        # print(f"after {_:<2} month: {without_loan_portfolio_end_size = :,.2f}")
+        randomized_rate = random.random() * randomization_monthly_return_factor
+        if random.random() > 0.5:
+            randomized_rate = -randomized_rate
+        print(f"after {_:<2} month: {100 * randomized_rate = :,.2f}%")
+        month_return_rate = expected_monthly_return_rate + randomized_rate
+        portfolio_size = (portfolio_size + monthly_contribution) * month_return_rate
 
     return portfolio_size
 
 
 if __name__ == '__main__':
     print(calculate_if_loan_is_worth(total_portfolio_amount=500_000,
-                                     portfolio_interest_amount=50_000,
-                                     bank_yearly_interest_rate_on_a_loan=0.1,
-                                     loan_length_in_month=24,
+                                     portfolio_interest_amount=70_000,
+                                     bank_yearly_interest_rate_on_a_loan=0.08,
+                                     loan_length_in_month=12,
                                      loan_amount=100_000,
-                                     expected_yearly_return_rate=0.05,
+                                     expected_yearly_return_rate=0.07,
+                                     randomization_monthly_return_factor=0.1,
                                      ))
