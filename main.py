@@ -16,7 +16,6 @@ def calculate_if_loan_is_worth(
         loan_length_in_month: int,
         loan_amount: float,
         expected_yearly_return_rate: float,    # TODO: calculate based on past investments ?
-        capital_gains_tax_rate: float = 0.25,
         randomization_monthly_return_factor: float = 0,  # TODO: explain
         verbose: bool = True,
 ) -> bool:
@@ -31,29 +30,18 @@ def calculate_if_loan_is_worth(
     :param loan_length_in_month:
     :param loan_amount:
     :param expected_yearly_return_rate:
-    :param capital_gains_tax_rate: 25% -> 0.25
     :param randomization_monthly_return_factor:
     :param verbose:
     :return:
     """
-    need_to_get_from_portfolio_gains = loan_amount / (1 - capital_gains_tax_rate)
-    # print(f"{need_to_get_from_portfolio_gains = :,.2f}")
-    if need_to_get_from_portfolio_gains <= portfolio_interest_amount:
-        portfolio_after_expense_without_loan = total_portfolio_amount - need_to_get_from_portfolio_gains
-    else:
-        amount_from_portfolio_gains = portfolio_interest_amount * (1 - capital_gains_tax_rate)
-        remaining_loan_amount = loan_amount - amount_from_portfolio_gains
-        portfolio_without_gains = total_portfolio_amount - portfolio_interest_amount
-        portfolio_after_expense_without_loan = portfolio_without_gains - remaining_loan_amount
-
-    # print(f"{portfolio_after_expense_without_loan = :,.2f}")
-
     loan_interest_rate = math.pow(1 + bank_yearly_interest_rate_on_a_loan, loan_length_in_month / 12)
     total_loan_payback_amount = loan_amount * loan_interest_rate
-    # print(f"{total_loan_payback_amount = :,.2f}")
 
     monthly_contribution_or_loan_payback = total_loan_payback_amount / loan_length_in_month
-    # print(f"{monthly_contribution_or_loan_payback = :,.2f}")
+
+    portfolio_after_expense_without_loan = __get_portfolio_after_expense_without_loan(total_portfolio_amount=total_portfolio_amount,
+                                                                                      portfolio_interest_amount=portfolio_interest_amount,
+                                                                                      loan_amount=loan_amount)
 
     without_loan_portfolio_end_size = __get_portfolio_size_after(start_portfolio=portfolio_after_expense_without_loan,
                                                                  monthly_contribution=monthly_contribution_or_loan_payback,
@@ -90,6 +78,23 @@ def calculate_if_loan_is_worth(
         Is a loan worth is: {'Yes!' if is_loan_worth_it else 'No!'}
         """)
     return is_loan_worth_it
+
+
+def __get_portfolio_after_expense_without_loan(
+        total_portfolio_amount: float,
+        portfolio_interest_amount: float,
+        loan_amount: float,
+        capital_gains_tax_rate: float = 0.25,
+) -> float:
+    need_to_get_from_portfolio_gains = loan_amount / (1 - capital_gains_tax_rate)
+    if need_to_get_from_portfolio_gains <= portfolio_interest_amount:
+        portfolio_after_expense_without_loan = total_portfolio_amount - need_to_get_from_portfolio_gains
+    else:
+        amount_from_portfolio_gains = portfolio_interest_amount * (1 - capital_gains_tax_rate)
+        remaining_loan_amount = loan_amount - amount_from_portfolio_gains
+        portfolio_without_gains = total_portfolio_amount - portfolio_interest_amount
+        portfolio_after_expense_without_loan = portfolio_without_gains - remaining_loan_amount
+    return portfolio_after_expense_without_loan
 
 
 def __format_number(large_number: float) -> str:
