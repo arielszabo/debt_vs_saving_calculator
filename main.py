@@ -1,5 +1,12 @@
 import math
 import random
+import statistics
+
+import pandas as pd
+import matplotlib
+matplotlib.use('TkAgg')
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 
 def calculate_if_loan_is_worth(
@@ -11,6 +18,7 @@ def calculate_if_loan_is_worth(
         expected_yearly_return_rate: float,    # TODO: calculate based on past investments ?
         capital_gains_tax_rate: float = 0.25,
         randomization_monthly_return_factor: float = 0,  # TODO: explain
+        verbose: bool = True,
 ) -> bool:
     """
     Assumptions:
@@ -25,6 +33,7 @@ def calculate_if_loan_is_worth(
     :param expected_yearly_return_rate:
     :param capital_gains_tax_rate: 25% -> 0.25
     :param randomization_monthly_return_factor:
+    :param verbose:
     :return:
     """
     need_to_get_from_portfolio_gains = loan_amount / (1 - capital_gains_tax_rate)
@@ -59,26 +68,27 @@ def calculate_if_loan_is_worth(
                                                               randomization_monthly_return_factor=randomization_monthly_return_factor)
 
     is_loan_worth_it = with_loan_portfolio_end_size > without_loan_portfolio_end_size  # TODO: add a risk factor
-    print(f"""
-    For a loan of {__format_number(loan_amount)}$ for {loan_length_in_month} months
-    with portfolio of size {__format_number(total_portfolio_amount)}$ ({__format_number(portfolio_interest_amount)}$ of them are gains)
-    and a {100 * bank_yearly_interest_rate_on_a_loan:.2f}% yearly interest on the loan,
-    while expecting {100 * expected_yearly_return_rate:.2f}% yearly return from investments (+-{100 * randomization_monthly_return_factor}% max of random change every month) 
-    
-    Option 1 - Pull from savings:
-    The amount you will need to pull from your investments is {__format_number(total_portfolio_amount - portfolio_after_expense_without_loan)}$.
-    After paying for the expense you will invest {__format_number(monthly_contribution_or_loan_payback)}$ every month
-    and your final portfolio size after {loan_length_in_month} month would be:
-    {__format_number(without_loan_portfolio_end_size)}$
-    
-    Option 2 - Get a loan:
-    The amount you will be paying on the loan will be {__format_number(total_loan_payback_amount)}$
-    Your monthly paybacks will be {__format_number(monthly_contribution_or_loan_payback)}$
-    and your final portfolio size after {loan_length_in_month} month would be:
-    {__format_number(with_loan_portfolio_end_size)}$
-     
-    Is a loan worth is: {'Yes!' if is_loan_worth_it else 'No!'}
-    """)
+    if verbose:
+        print(f"""
+        For a loan of {__format_number(loan_amount)}$ for {loan_length_in_month} months
+        with portfolio of size {__format_number(total_portfolio_amount)}$ ({__format_number(portfolio_interest_amount)}$ of them are gains)
+        and a {100 * bank_yearly_interest_rate_on_a_loan:.2f}% yearly interest on the loan,
+        while expecting {100 * expected_yearly_return_rate:.2f}% yearly return from investments (+-{100 * randomization_monthly_return_factor}% max of random change every month) 
+        
+        Option 1 - Pull from savings:
+        The amount you will need to pull from your investments is {__format_number(total_portfolio_amount - portfolio_after_expense_without_loan)}$.
+        After paying for the expense you will invest {__format_number(monthly_contribution_or_loan_payback)}$ every month
+        and your final portfolio size after {loan_length_in_month} month would be:
+        {__format_number(without_loan_portfolio_end_size)}$
+        
+        Option 2 - Get a loan:
+        The amount you will be paying on the loan will be {__format_number(total_loan_payback_amount)}$
+        Your monthly paybacks will be {__format_number(monthly_contribution_or_loan_payback)}$
+        and your final portfolio size after {loan_length_in_month} month would be:
+        {__format_number(with_loan_portfolio_end_size)}$
+         
+        Is a loan worth is: {'Yes!' if is_loan_worth_it else 'No!'}
+        """)
     return is_loan_worth_it
 
 
@@ -105,7 +115,7 @@ def __get_portfolio_size_after(start_portfolio: float,
                                monthly_contribution: float,
                                expected_yearly_return_rate: float,
                                month_amount: int,
-                               randomization_monthly_return_factor: float
+                               randomization_monthly_return_factor: float,
                                ) -> float:
     expected_monthly_return_rate = math.pow(1 + expected_yearly_return_rate, 1 / 12)
     # print(f"{expected_monthly_return_rate = :,.4f}")
@@ -115,7 +125,7 @@ def __get_portfolio_size_after(start_portfolio: float,
         randomized_rate = random.random() * randomization_monthly_return_factor
         if random.random() > 0.5:
             randomized_rate = -randomized_rate
-        print(f"after {_:<2} month: {100 * randomized_rate = :,.2f}%")
+        # print(f"after {_:<2} month: {100 * randomized_rate = :,.2f}%")
         month_return_rate = expected_monthly_return_rate + randomized_rate
         portfolio_size = (portfolio_size + monthly_contribution) * month_return_rate
 
@@ -123,11 +133,39 @@ def __get_portfolio_size_after(start_portfolio: float,
 
 
 if __name__ == '__main__':
-    print(calculate_if_loan_is_worth(total_portfolio_amount=500_000,
-                                     portfolio_interest_amount=70_000,
-                                     bank_yearly_interest_rate_on_a_loan=0.08,
-                                     loan_length_in_month=12,
-                                     loan_amount=100_000,
-                                     expected_yearly_return_rate=0.07,
-                                     randomization_monthly_return_factor=0.01,
-                                     ))
+    TOTAL_PORTFOLIO_AMOUNT = 500_000
+    PORTFOLIO_INTEREST_AMOUNT = 70_000
+    LOAN_AMOUNT = 200_000
+    LOAN_LENGTH_IN_MONTH = 12
+    calculate_if_loan_is_worth(total_portfolio_amount=TOTAL_PORTFOLIO_AMOUNT,
+                               portfolio_interest_amount=PORTFOLIO_INTEREST_AMOUNT,
+                               bank_yearly_interest_rate_on_a_loan=0.08,
+                               loan_length_in_month=LOAN_LENGTH_IN_MONTH,
+                               loan_amount=LOAN_AMOUNT,
+                               expected_yearly_return_rate=0.07,
+                               randomization_monthly_return_factor=0,
+                               )
+
+    rate_values = [(i / 100) for i in range(20)]
+    data = []
+    for bank_yearly_interest_rate_on_a_loan in rate_values:
+        for expected_yearly_return_rate in rate_values:
+            results = []
+            for _ in range(1_000):
+                result = calculate_if_loan_is_worth(total_portfolio_amount=TOTAL_PORTFOLIO_AMOUNT,
+                                                    portfolio_interest_amount=PORTFOLIO_INTEREST_AMOUNT,
+                                                    bank_yearly_interest_rate_on_a_loan=bank_yearly_interest_rate_on_a_loan,
+                                                    loan_length_in_month=LOAN_LENGTH_IN_MONTH,
+                                                    loan_amount=LOAN_AMOUNT,
+                                                    expected_yearly_return_rate=expected_yearly_return_rate,
+                                                    randomization_monthly_return_factor=0.01,
+                                                    verbose=False)
+                results.append(result)
+            final_result = statistics.mode(results)
+            data.append([100 * bank_yearly_interest_rate_on_a_loan, 100 * expected_yearly_return_rate, final_result])
+
+    # print(data)
+
+    df = pd.DataFrame(data, columns=["bank_yearly_interest_rate_on_a_loan", "expected_yearly_return_rate", "result"])
+    sns.scatterplot(data=df, x="bank_yearly_interest_rate_on_a_loan", y="expected_yearly_return_rate", hue="result")
+    plt.show()
