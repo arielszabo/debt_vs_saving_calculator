@@ -63,7 +63,7 @@ def calculate_if_loan_is_worth(
     For a loan of {__format_number(loan_amount)}$ for {loan_length_in_month} months
     with portfolio of size {__format_number(total_portfolio_amount)}$ ({__format_number(portfolio_interest_amount)}$ of them are gains)
     and a {100 * bank_yearly_interest_rate_on_a_loan:.2f}% yearly interest on the loan,
-    while expecting {100 * expected_yearly_return_rate:.2f}% yearly return from investments 
+    while expecting {100 * expected_yearly_return_rate:.2f}% yearly return from investments (+-{100 * randomization_monthly_return_factor}% max of random change every month) 
     
     Option 1 - Pull from savings:
     The amount you will need to pull from your investments is {__format_number(total_portfolio_amount - portfolio_after_expense_without_loan)}$.
@@ -129,5 +129,5 @@ if __name__ == '__main__':
                                      loan_length_in_month=12,
                                      loan_amount=100_000,
                                      expected_yearly_return_rate=0.07,
-                                     randomization_monthly_return_factor=0.1,
+                                     randomization_monthly_return_factor=0.01,
                                      ))
