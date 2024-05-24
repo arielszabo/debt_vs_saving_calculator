@@ -1,12 +1,5 @@
 import math
 import random
-import statistics
-
-import pandas as pd
-import matplotlib
-matplotlib.use('TkAgg')
-import matplotlib.pyplot as plt
-import seaborn as sns
 
 
 def calculate_if_loan_is_worth(
@@ -23,6 +16,8 @@ def calculate_if_loan_is_worth(
     Assumptions:
     1) Your portfolio is profitable, meaning you don't have loses. TODO: add an option to calculate losses as well where you don't pay taxes
     2) You don't add any more money to your portfolio until you pay back the loan.
+    3) The loan interest rate does not grow TODO: add a parameter for this as well
+    4) The investment return can be negative TODO: add a parameter for this as well, maybe calculate it based on history
 
     :param total_portfolio_amount:
     :param portfolio_interest_amount:
@@ -55,7 +50,7 @@ def calculate_if_loan_is_worth(
                                                               month_amount=loan_length_in_month,
                                                               randomization_monthly_return_factor=randomization_monthly_return_factor)
 
-    is_loan_worth_it = with_loan_portfolio_end_size > without_loan_portfolio_end_size  # TODO: add a risk factor
+    is_loan_worth_it = with_loan_portfolio_end_size > without_loan_portfolio_end_size  # TODO: add a risk factor for example a margin of $ that have to be added to the portfolioo with loan before the comparison to represent the risk of the loan
     if verbose:
         print(f"""
         For a loan of {__format_number(loan_amount)}$ for {loan_length_in_month} months
@@ -138,39 +133,11 @@ def __get_portfolio_size_after(start_portfolio: float,
 
 
 if __name__ == '__main__':
-    TOTAL_PORTFOLIO_AMOUNT = 500_000
-    PORTFOLIO_INTEREST_AMOUNT = 70_000
-    LOAN_AMOUNT = 200_000
-    LOAN_LENGTH_IN_MONTH = 12
-    calculate_if_loan_is_worth(total_portfolio_amount=TOTAL_PORTFOLIO_AMOUNT,
-                               portfolio_interest_amount=PORTFOLIO_INTEREST_AMOUNT,
+    calculate_if_loan_is_worth(total_portfolio_amount=500_000,
+                               portfolio_interest_amount=70_000,
                                bank_yearly_interest_rate_on_a_loan=0.08,
-                               loan_length_in_month=LOAN_LENGTH_IN_MONTH,
-                               loan_amount=LOAN_AMOUNT,
+                               loan_length_in_month=200_000,
+                               loan_amount=12,
                                expected_yearly_return_rate=0.07,
                                randomization_monthly_return_factor=0,
                                )
-
-    rate_values = [(i / 100) for i in range(20)]
-    data = []
-    for bank_yearly_interest_rate_on_a_loan in rate_values:
-        for expected_yearly_return_rate in rate_values:
-            results = []
-            for _ in range(1_000):
-                result = calculate_if_loan_is_worth(total_portfolio_amount=TOTAL_PORTFOLIO_AMOUNT,
-                                                    portfolio_interest_amount=PORTFOLIO_INTEREST_AMOUNT,
-                                                    bank_yearly_interest_rate_on_a_loan=bank_yearly_interest_rate_on_a_loan,
-                                                    loan_length_in_month=LOAN_LENGTH_IN_MONTH,
-                                                    loan_amount=LOAN_AMOUNT,
-                                                    expected_yearly_return_rate=expected_yearly_return_rate,
-                                                    randomization_monthly_return_factor=0.01,
-                                                    verbose=False)
-                results.append(result)
-            final_result = statistics.mode(results)
-            data.append([100 * bank_yearly_interest_rate_on_a_loan, 100 * expected_yearly_return_rate, final_result])
-
-    # print(data)
-
-    df = pd.DataFrame(data, columns=["bank_yearly_interest_rate_on_a_loan", "expected_yearly_return_rate", "result"])
-    sns.scatterplot(data=df, x="bank_yearly_interest_rate_on_a_loan", y="expected_yearly_return_rate", hue="result")
-    plt.show()
