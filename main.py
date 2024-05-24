@@ -5,7 +5,7 @@ def calculate_if_loan_is_worth(
         total_portfolio_amount: float,
         portfolio_interest_amount: float,
         bank_yearly_interest_rate_on_a_loan: float,
-        loan_length_in_month: int,  # TODO: change to get monthly_investment_contribution_or_loan_payback instead of this or maybe either
+        loan_length_in_month: int,
         loan_amount: float,
         expected_yearly_return_rate: float,    # TODO: calculate based on past investments ?
         capital_gains_tax_rate: float = 0.25,
@@ -25,7 +25,6 @@ def calculate_if_loan_is_worth(
     :param capital_gains_tax_rate: 25% -> 0.25
     :return:
     """
-
     need_to_get_from_portfolio_gains = loan_amount / (1 - capital_gains_tax_rate)
     # print(f"{need_to_get_from_portfolio_gains = :,.2f}")
     if need_to_get_from_portfolio_gains <= portfolio_interest_amount:
@@ -69,6 +68,7 @@ def calculate_if_loan_is_worth(
     {__format_number(without_loan_portfolio_end_size)}$
     
     Option 2 - Get a loan:
+    The amount you will be paying on the loan will be {__format_number(total_loan_payback_amount)}$
     Your monthly paybacks will be {__format_number(monthly_investment_contribution_or_loan_payback)}$
     and your final portfolio size after {loan_length_in_month} month would be:
     {__format_number(with_loan_portfolio_end_size)}$
@@ -92,7 +92,7 @@ def __format_number(large_number: float) -> str:
             if large_number % unit_scale == 0:
                 return f"{large_number // unit_scale}{suffix}"
             else:
-                return f"{round(large_number / unit_scale, 1)}{suffix}"
+                return f"~{round(large_number / unit_scale, 2)}{suffix}"
 
     return str(large_number)
 
@@ -116,7 +116,7 @@ if __name__ == '__main__':
     print(calculate_if_loan_is_worth(total_portfolio_amount=500_000,
                                      portfolio_interest_amount=50_000,
                                      bank_yearly_interest_rate_on_a_loan=0.1,
-                                     loan_length_in_month=12,
+                                     loan_length_in_month=24,
                                      loan_amount=100_000,
                                      expected_yearly_return_rate=0.05,
                                      ))
