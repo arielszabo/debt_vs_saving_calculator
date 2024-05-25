@@ -1,5 +1,6 @@
 import math
 import random
+from typing import Optional
 
 
 def calculate_if_loan_is_worth(
@@ -9,7 +10,8 @@ def calculate_if_loan_is_worth(
         loan_length_in_month: int,
         loan_amount: float,
         expected_yearly_return_rate: float,    # TODO: calculate based on past investments ?
-        randomization_monthly_return_factor: float = 0,  # TODO: explain
+        randomization_monthly_return_factor: Optional[float] = None,  # TODO: explain
+        randomized_drop_in_portfolio: Optional[float] = None,  # TODO: explain
         verbose: bool = True,
 ) -> bool:
     """
@@ -26,6 +28,7 @@ def calculate_if_loan_is_worth(
     :param loan_amount:
     :param expected_yearly_return_rate:
     :param randomization_monthly_return_factor:
+    :param randomized_drop_in_portfolio
     :param verbose:
     :return:
     """
@@ -38,17 +41,18 @@ def calculate_if_loan_is_worth(
                                                                                       portfolio_interest_amount=portfolio_interest_amount,
                                                                                       loan_amount=loan_amount)
 
+    monthly_return_rates = __get_monthly_return_rates(expected_yearly_return_rate=expected_yearly_return_rate,
+                                                      month_amount=loan_length_in_month,
+                                                      randomization_monthly_return_factor=randomization_monthly_return_factor,
+                                                      randomized_drop_in_portfolio=randomized_drop_in_portfolio
+                                                      )  # use the same monthly return rates for the 2 scenarios
     without_loan_portfolio_end_size = __get_portfolio_size_after(start_portfolio=portfolio_after_expense_without_loan,
                                                                  monthly_contribution=monthly_contribution_or_loan_payback,
-                                                                 expected_yearly_return_rate=expected_yearly_return_rate,
-                                                                 month_amount=loan_length_in_month,
-                                                                 randomization_monthly_return_factor=randomization_monthly_return_factor)
+                                                                 monthly_return_rates=monthly_return_rates)
 
     with_loan_portfolio_end_size = __get_portfolio_size_after(start_portfolio=total_portfolio_amount,
                                                               monthly_contribution=0,
-                                                              expected_yearly_return_rate=expected_yearly_return_rate,
-                                                              month_amount=loan_length_in_month,
-                                                              randomization_monthly_return_factor=randomization_monthly_return_factor)
+                                                              monthly_return_rates=monthly_return_rates)
 
     is_loan_worth_it = with_loan_portfolio_end_size > without_loan_portfolio_end_size  # TODO: add a risk factor for example a margin of $ that have to be added to the portfolioo with loan before the comparison to represent the risk of the loan
     if verbose:
@@ -113,23 +117,37 @@ def __format_number(large_number: float) -> str:
 
 def __get_portfolio_size_after(start_portfolio: float,
                                monthly_contribution: float,
-                               expected_yearly_return_rate: float,
-                               month_amount: int,
-                               randomization_monthly_return_factor: float,
+                               monthly_return_rates: list[float],
                                ) -> float:
-    expected_monthly_return_rate = math.pow(1 + expected_yearly_return_rate, 1 / 12)
-    # print(f"{expected_monthly_return_rate = :,.4f}")
 
     portfolio_size = start_portfolio
-    for _ in range(month_amount):
-        randomized_rate = random.random() * randomization_monthly_return_factor
-        if random.random() > 0.5:
-            randomized_rate = -randomized_rate
-        # print(f"after {_:<2} month: {100 * randomized_rate = :,.2f}%")
-        month_return_rate = expected_monthly_return_rate + randomized_rate
+    for month_return_rate in monthly_return_rates:
         portfolio_size = (portfolio_size + monthly_contribution) * month_return_rate
 
     return portfolio_size
+
+
+def __get_monthly_return_rates(
+        expected_yearly_return_rate: float,
+        month_amount: int,
+        randomization_monthly_return_factor: Optional[float],
+        randomized_drop_in_portfolio: Optional[float],
+) -> list[float]:
+    expected_monthly_return_rate = math.pow(1 + expected_yearly_return_rate, 1 / 12)
+    monthly_return_rates = [expected_monthly_return_rate for _ in range(month_amount)]
+
+    if randomization_monthly_return_factor is not None:
+        randomization_monthly_return_rates = []
+        for monthly_return_rate in monthly_return_rates:
+            randomized_rate = random.uniform(-randomization_monthly_return_factor, randomization_monthly_return_factor)
+            randomization_monthly_return_rates.append(monthly_return_rate + randomized_rate)
+        monthly_return_rates = randomization_monthly_return_rates
+
+    if randomized_drop_in_portfolio is not None:
+        random_moth_index = random.randint(0, len(monthly_return_rates))
+        monthly_return_rates[random_moth_index] = randomized_drop_in_portfolio
+
+    return monthly_return_rates
 
 
 if __name__ == '__main__':
