@@ -144,8 +144,8 @@ def __get_monthly_return_rates(
         monthly_return_rates = randomization_monthly_return_rates
 
     if randomized_drop_in_portfolio is not None:
-        random_moth_index = random.randint(0, len(monthly_return_rates))
-        monthly_return_rates[random_moth_index] = randomized_drop_in_portfolio
+        random_moth_index = random.randint(0, len(monthly_return_rates) - 1)
+        monthly_return_rates[random_moth_index] = 1 + randomized_drop_in_portfolio
 
     return monthly_return_rates
 
