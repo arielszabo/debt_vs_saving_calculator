@@ -2,6 +2,7 @@ import statistics
 
 import pandas as pd
 import matplotlib
+from tqdm import tqdm
 
 from main import calculate_if_loan_is_worth
 
@@ -14,12 +15,17 @@ PORTFOLIO_INTEREST_AMOUNT = 70_000
 LOAN_AMOUNT = 200_000
 LOAN_LENGTH_IN_MONTH = 12
 
-rate_values = [(i / 100) for i in range(20)]
+
+bank_yearly_interest_rate_on_a_loan_values = [(i / 100) for i in range(20)]
+expected_yearly_return_rate_values = [(i / 100) for i in range(20)] + [-(i / 100) for i in range(20)]
+random_sample_size = 1_000
+progress_bar = tqdm(total=random_sample_size * len(expected_yearly_return_rate_values) * len(bank_yearly_interest_rate_on_a_loan_values))
+
 data = []
-for bank_yearly_interest_rate_on_a_loan in rate_values:
-    for expected_yearly_return_rate in rate_values:
+for bank_yearly_interest_rate_on_a_loan in bank_yearly_interest_rate_on_a_loan_values:
+    for expected_yearly_return_rate in expected_yearly_return_rate_values:
         results = []
-        for _ in range(1_000):
+        for _ in range(random_sample_size):
             result = calculate_if_loan_is_worth(total_portfolio_amount=TOTAL_PORTFOLIO_AMOUNT,
                                                 portfolio_interest_amount=PORTFOLIO_INTEREST_AMOUNT,
                                                 bank_yearly_interest_rate_on_a_loan=bank_yearly_interest_rate_on_a_loan,
@@ -29,6 +35,7 @@ for bank_yearly_interest_rate_on_a_loan in rate_values:
                                                 randomization_monthly_return_factor=0.01,
                                                 verbose=False)
             results.append(result)
+            progress_bar.update(1)
         final_result = statistics.mode(results)
         data.append([100 * bank_yearly_interest_rate_on_a_loan, 100 * expected_yearly_return_rate, final_result])
 
