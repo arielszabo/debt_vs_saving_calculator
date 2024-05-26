@@ -1,6 +1,7 @@
 import math
 import random
 from typing import Optional
+from formatting_utils import get_calculation_text
 
 
 def calculate_if_loan_is_worth(
@@ -56,28 +57,20 @@ def calculate_if_loan_is_worth(
 
     is_loan_worth_it = with_loan_portfolio_end_size > without_loan_portfolio_end_size  # TODO: add a risk factor for example a margin of $ that have to be added to the portfolioo with loan before the comparison to represent the risk of the loan
     if verbose:
-        print(f"""
-        For a loan of ${__format_number(loan_amount)} for {loan_length_in_month} months
-        with portfolio of size ${__format_number(total_portfolio_amount)} (${__format_number(portfolio_interest_amount)} of them are gains)
-        and a {100 * bank_yearly_interest_rate_on_a_loan:.2f}% yearly interest on the loan,
-        while expecting {100 * expected_yearly_return_rate:.2f}% yearly return from investments.
-        {f'* with a +-{100 * randomization_monthly_return_factor}% max of random change in return every month' if randomization_monthly_return_factor is not None else ''}
-        {f'** with a random drop of {100 * randomized_drop_in_portfolio}% in one month.' if randomized_drop_in_portfolio is not None else ''} 
-        
-        Option 1 - Pull from savings:
-        The amount you will need to pull from your investments is ${__format_number(total_portfolio_amount - portfolio_after_expense_without_loan)}.
-        After paying for the expense you will invest ${__format_number(monthly_contribution_or_loan_payback)} every month
-        and your final portfolio size after {loan_length_in_month} month would be:
-        ${__format_number(without_loan_portfolio_end_size)}
-        
-        Option 2 - Get a loan:
-        The amount you will be paying on the loan will be ${__format_number(total_loan_payback_amount)}
-        Your monthly paybacks will be ${__format_number(monthly_contribution_or_loan_payback)}
-        and your final portfolio size after {loan_length_in_month} month would be:
-        ${__format_number(with_loan_portfolio_end_size)}
-         
-        Is a loan worth is: {'Yes!' if is_loan_worth_it else 'No!'}
-        """)
+        print(get_calculation_text(total_portfolio_amount,
+                                   portfolio_interest_amount,
+                                   bank_yearly_interest_rate_on_a_loan,
+                                   loan_length_in_month,
+                                   loan_amount,
+                                   expected_yearly_return_rate,
+                                   portfolio_after_expense_without_loan,
+                                   monthly_contribution_or_loan_payback,
+                                   without_loan_portfolio_end_size,
+                                   total_loan_payback_amount,
+                                   with_loan_portfolio_end_size,
+                                   randomization_monthly_return_factor,
+                                   randomized_drop_in_portfolio,
+                                   is_loan_worth_it))
     return is_loan_worth_it
 
 
@@ -96,25 +89,6 @@ def __get_portfolio_after_expense_without_loan(
         portfolio_without_gains = total_portfolio_amount - portfolio_interest_amount
         portfolio_after_expense_without_loan = portfolio_without_gains - remaining_loan_amount
     return portfolio_after_expense_without_loan
-
-
-def __format_number(large_number: float) -> str:
-    absolute_large_number = abs(large_number)
-
-    unit_scale_to_suffix = {
-        1_000_000_000_000: "T",
-        1_000_000_000: "B",
-        1_000_000: "M",
-        1_000: "K"
-    }
-    for unit_scale, suffix in unit_scale_to_suffix.items():
-        if absolute_large_number >= unit_scale:
-            if large_number % unit_scale == 0:
-                return f"{large_number // unit_scale}{suffix}"
-            else:
-                return f"{round(large_number / unit_scale, 2)}{suffix}"
-
-    return str(large_number)
 
 
 def __get_portfolio_size_after(start_portfolio: float,
