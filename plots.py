@@ -11,9 +11,11 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 TOTAL_PORTFOLIO_AMOUNT = 500_000
-PORTFOLIO_INTEREST_AMOUNT = 70_000
-LOAN_AMOUNT = 200_000
+PORTFOLIO_INTEREST_AMOUNT = 50_000
+LOAN_AMOUNT = 100_000
 LOAN_LENGTH_IN_MONTH = 12
+RANDOMIZATION_MONTHLY_RETURN_FACTOR = 0.01
+RANDOMIZED_DROP_IN_PORTFOLIO = -0.3
 
 
 bank_yearly_interest_rate_on_a_loan_values = [(i / 100) for i in range(20)]
@@ -32,7 +34,8 @@ for bank_yearly_interest_rate_on_a_loan in bank_yearly_interest_rate_on_a_loan_v
                                                 loan_length_in_month=LOAN_LENGTH_IN_MONTH,
                                                 loan_amount=LOAN_AMOUNT,
                                                 expected_yearly_return_rate=expected_yearly_return_rate,
-                                                randomization_monthly_return_factor=0.01,
+                                                randomization_monthly_return_factor=RANDOMIZATION_MONTHLY_RETURN_FACTOR,
+                                                randomized_drop_in_portfolio=RANDOMIZED_DROP_IN_PORTFOLIO,
                                                 verbose=False)
             results.append(result)
             progress_bar.update(1)
