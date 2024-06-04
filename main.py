@@ -127,8 +127,8 @@ def __get_monthly_return_rates(
 
 
 if __name__ == '__main__':
-    calculate_if_loan_is_worth(total_portfolio_amount=500_000,
-                               portfolio_interest_amount=70_000,
+    calculate_if_loan_is_worth(total_portfolio_amount=1_000_000,
+                               portfolio_interest_amount=100_000,
                                bank_yearly_interest_rate_on_a_loan=0.08,
                                loan_length_in_month=12,
                                loan_amount=100_000,
